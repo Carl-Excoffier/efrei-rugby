@@ -42,6 +42,8 @@ app.use((req, res, next) => {
     const protectedPaths = [
         "/dashboard.html",
         "/dashboard",
+        "/profile.html",
+        "/profile",
         "/locker-room.html",
         "/locker-room",
     ];
@@ -242,6 +244,100 @@ app.get(["/api/gallery", "/app/api/gallery"], (req, res) => {
 
 // 10. START THE SERVER
 const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Efrei Rugby Server is running on port ${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Efrei Rugby Server is running on port ${3000}`);
+});
+
+// A. GET FULL PROFILE & REVIEWS
+app.get(["/api/profile", "/app/api/profile"], (req, res) => {
+    if (!req.session || !req.session.loggedIn) {
+        return res
+            .status(401)
+            .json({ success: false, message: "Not logged in" });
+    }
+
+    const userId = req.session.user.id;
+
+    // Query 1: Get the player's full details
+    const playerQuery = "SELECT * FROM players WHERE id = ?";
+
+    // Query 2: JOIN reviews with events to get the event name and date
+    const reviewsQuery = `
+        SELECT r.rating, r.comment, e.event_name, e.event_type
+        FROM reviews r
+        LEFT JOIN events e ON r.event_id = e.id
+        WHERE r.player_id = ?
+    `;
+
+    db.query(playerQuery, [userId], (err, playerResults) => {
+        if (err || playerResults.length === 0)
+            return res.json({ success: false, message: "Player not found." });
+
+        db.query(reviewsQuery, [userId], (err, reviewResults) => {
+            if (err) {
+                console.error("Review fetch error:", err);
+                return res.json({
+                    success: false,
+                    message: "Error fetching reviews.",
+                });
+            }
+
+            res.json({
+                success: true,
+                player: playerResults[0],
+                reviews: reviewResults,
+            });
+        });
+    });
+});
+
+// A. GET FULL PROFILE & REVIEWS
+app.get(["/api/profile", "/app/api/profile"], (req, res) => {
+    // 1. Check if the user is logged in
+    if (!req.session || !req.session.loggedIn) {
+        return res
+            .status(401)
+            .json({ success: false, message: "Not logged in" });
+    }
+
+    const userId = req.session.user.id;
+
+    // 2. Query 1: Get the player's full details
+    const playerQuery = "SELECT * FROM players WHERE id = ?";
+
+    // 3. Query 2: Get their reviews, linking to the events table to get the match name
+    // (Assuming your events table primary key is 'id'. If it's 'event_id', change e.id to e.event_id)
+    const reviewsQuery = `
+        SELECT r.rating, r.comment, e.event_name, e.event_type
+        FROM reviews r
+        LEFT JOIN events e ON r.event_id = e.id
+        WHERE r.player_id = ?
+        ORDER BY r.id DESC
+    `;
+
+    // Execute the first query (Player Info)
+    db.query(playerQuery, [userId], (err, playerResults) => {
+        if (err || playerResults.length === 0) {
+            console.error("Error fetching player:", err);
+            return res.json({ success: false, message: "Player not found." });
+        }
+
+        // Execute the second query (Reviews)
+        db.query(reviewsQuery, [userId], (err, reviewResults) => {
+            if (err) {
+                console.error("Review fetch error:", err);
+                return res.json({
+                    success: false,
+                    message: "Error fetching reviews.",
+                });
+            }
+
+            // Package both results together and send them to the frontend
+            res.json({
+                success: true,
+                player: playerResults[0],
+                reviews: reviewResults,
+            });
+        });
+    });
 });
