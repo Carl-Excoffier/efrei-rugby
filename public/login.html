@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Login - Efrei Rugby</title>
+        <link rel="icon" type="image/png" href="logo.png" />
+        <link rel="stylesheet" href="css/login.css" />
+    </head>
+    <body>
+        <div class="login-card">
+            <img src="rugbiere-logo.png" alt="Efrei Rugby Logo" />
+            <h2>Login Portal</h2>
+
+            <div id="error-message" class="error-box"></div>
+
+            <form id="login-form">
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="player@gmail.com"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="••••••••"
+                        required
+                    />
+                </div>
+
+                <button type="submit" class="login-btn">Sign In</button>
+            </form>
+        </div>
+
+        <div class="footer">
+            <p>
+                Copyright &copy; 2026 Carl Excoffier / Efrei Rugby. All Rights
+                Reserved.
+            </p>
+        </div>
+
+        <script src="js/login.js"></script>
+    </body>
+</html>

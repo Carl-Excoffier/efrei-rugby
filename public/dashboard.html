@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Efrei Rugby Dashboard</title>
+        <link rel="icon" type="image/png" href="rugbiere-logo.png" />
+        <link rel="stylesheet" href="css/dashboard.css" />
+    </head>
+    <body>
+        <div class="sidebar">
+            <ul>
+                <li class="active">Dashboard</li>
+                <li>My Profile</li>
+                <li>Schedule</li>
+                <li>Team Roster</li>
+                <li onclick="location.href = '/app/locker-room.html'">
+                    Locker Room
+                </li>
+            </ul>
+            <img id="logout-btn" src="logout-64.png" alt="Logout" />
+        </div>
+
+        <div class="main-content">
+            <div class="top-bar">
+                <img src="rugbiere-logo.png" alt="Efrei Rugby Logo" />
+                <div class="title-group">
+                    <h1>The Dashboard</h1>
+                    <h4>
+                        Pictures by &copy;
+                        <a href="https://efreipicturestudio.fr/"
+                            >Efrei Pictures Studio</a
+                        >
+                    </h4>
+                </div>
+            </div>
+
+            <div class="hero-banner">
+                <h2 id="welcome-text">Welcome back!</h2>
+                <p>Next training: ...</p>
+            </div>
+
+            <div class="grid-container">
+                <div class="card">
+                    <h3>Quick Stats</h3>
+                    <ul style="list-style: none; padding: 0; line-height: 2">
+                        <li>
+                            🏉 <strong>Tries:</strong>
+                            <span id="quick-stats-tries">0</span>
+                        </li>
+                        <li>
+                            ⭐ <strong>Avg Review:</strong>
+                            <span id="quick-stats-review">0.0</span>/5
+                        </li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <h3>Last Review</h3>
+                    <p>Coach comments go here.</p>
+                </div>
+                <div class="card full-width">
+                    <h2 id="event-title">Latest Event Photos</h2>
+                    <div id="photo-gallery" class="gallery-grid"></div>
+                </div>
+            </div>
+
+            <footer>
+                <p>
+                    Copyright &copy; 2026 Carl Excoffier / Efrei Rugby. All
+                    Rights Reserved.
+                </p>
+            </footer>
+        </div>
+        <script src="js/dashboard.js"></script>
+    </body>
+</html>
