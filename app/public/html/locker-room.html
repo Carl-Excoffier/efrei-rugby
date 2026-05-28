@@ -2,22 +2,26 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
+        <base href="/app/" />
         <title>Locker Room - Efrei Rugby</title>
         <link rel="icon" type="image/png" href="rugbiere-logo.png" />
-        <link rel="stylesheet" href="css/dashboard.css" />
+        <link rel="stylesheet" href="css/global.css" />
     </head>
     <body>
         <div class="sidebar">
-            <ul>
-                <li onclick="window.location.href = '/app/dashboard.html'">
-                    Dashboard
-                </li>
-                <li>My Profile</li>
-                <li>Schedule</li>
-                <li>Team Roster</li>
+            <ul id="sidebar-list">
+                <li onclick="location.href = 'dashboard'">Dashboard</li>
+                <li onclick="location.href = 'profile'">My Profile</li>
+                <li onclick="location.href = 'schedule'">Schedule</li>
+                <li onclick="location.href = 'roster'">Team Roster</li>
                 <li class="active">Locker Room</li>
             </ul>
-            <img id="logout-btn" src="logout-64.png" alt="Logout Logo" />
+            <img
+                id="logout-btn"
+                src="logout-64.png"
+                alt="Logout"
+                style="cursor: pointer"
+            />
         </div>
 
         <div class="main-content">

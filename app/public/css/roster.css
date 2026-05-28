@@ -1,0 +1,64 @@
+/* --- ROSTER SECTIONS --- */
+.roster-section {
+    margin-bottom: 40px;
+    width: 100%;
+}
+
+/* Section Headers (Forwards, Backs, etc.) */
+.roster-section h2 {
+    border-bottom: 3px solid #105b3f;
+    padding-bottom: 10px;
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: #105b3f;
+    font-size: 1.5em;
+}
+
+/* --- THE GRID & CARDS --- */
+.roster-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.roster-card {
+    width: 160px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid #ddd;
+    text-align: center;
+    padding-bottom: 10px;
+    transition:
+        transform 0.2s,
+        box-shadow 0.2s;
+}
+
+.roster-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* --- PLAYER INFO --- */
+.roster-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-bottom: 3px solid #105b3f;
+    margin-bottom: 10px;
+}
+
+.roster-name {
+    margin: 0 0 4px 0;
+    font-size: 1em;
+    font-weight: bold;
+    color: #333;
+    padding: 0 5px;
+}
+
+.roster-pos {
+    margin: 0;
+    font-size: 0.8em;
+    color: #777;
+    text-transform: uppercase;
+}

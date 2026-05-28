@@ -2,22 +2,20 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
+        <base href="/app/" />
         <title>Efrei Rugby Dashboard</title>
         <link rel="icon" type="image/png" href="rugbiere-logo.png" />
+        <link rel="stylesheet" href="css/global.css" />
         <link rel="stylesheet" href="css/dashboard.css" />
     </head>
     <body>
         <div class="sidebar">
-            <ul>
+            <ul id="sidebar-list">
                 <li class="active">Dashboard</li>
-                <li onclick="location.href = '/app/profile.html'">
-                    My Profile
-                </li>
-                <li>Schedule</li>
-                <li>Team Roster</li>
-                <li onclick="location.href = '/app/locker-room.html'">
-                    Locker Room
-                </li>
+                <li onclick="location.href = 'profile'">My Profile</li>
+                <li onclick="location.href = 'schedule'">Schedule</li>
+                <li onclick="location.href = 'roster'">Team Roster</li>
+                <li onclick="location.href = 'locker-room'">Locker Room</li>
             </ul>
             <img id="logout-btn" src="logout-64.png" alt="Logout" />
         </div>
@@ -38,13 +36,16 @@
 
             <div class="hero-banner">
                 <h2 id="welcome-text">Welcome back!</h2>
-                <p>Next training: ...</p>
+                <p>
+                    <strong>📅 Next training:</strong>
+                    <span id="next-training">Date Loading...</span>
+                </p>
             </div>
 
             <div class="grid-container">
                 <div class="card">
-                    <h3>Quick Stats</h3>
-                    <ul style="list-style: none; padding: 0; line-height: 2">
+                    <h3 class="section-title">Quick Stats</h3>
+                    <ul class="list-unstyled">
                         <li>
                             🏉 <strong>Tries:</strong>
                             <span id="quick-stats-tries">0</span>
@@ -56,15 +57,18 @@
                     </ul>
                 </div>
                 <div class="card">
-                    <h3>Last Review</h3>
-                    <p>Coach comments go here.</p>
+                    <h3 class="section-title">Last Review</h3>
+                    <div id="reviews-container">
+                        <p>Loading reviews...</p>
+                    </div>
                 </div>
                 <div class="card full-width">
-                    <h2 id="event-title">Latest Event Photos</h2>
+                    <h2 id="event-title" class="section-title">
+                        Latest Event Photos
+                    </h2>
                     <div id="photo-gallery" class="gallery-grid"></div>
                 </div>
             </div>
-
             <footer>
                 <p>
                     Copyright &copy; 2026 Carl Excoffier / Efrei Rugby. All

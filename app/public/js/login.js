@@ -1,3 +1,21 @@
+fetch("api/user")
+    .then((res) => res.json())
+    .then((data) => {
+        if (data.success) {
+            if (
+                data.user.roster_category === "coaches" ||
+                data.user.preferred_position === "Admin"
+            ) {
+                const sideBar = document.getElementById("sidebar-list");
+                const listElem = document.createElement("li");
+                listElem.textContent = "Coach Panel";
+                listElem.onclick = "location.href = 'coach'";
+
+                sideBar.appendChild(listElem);
+            }
+        }
+    });
+
 const form = document.getElementById("login-form");
 const errorBox = document.getElementById("error-message");
 
@@ -13,7 +31,7 @@ form.addEventListener("submit", function (event) {
         return;
     }
 
-    fetch("/app/api/login", {
+    fetch("api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: email, password: password }),
@@ -22,7 +40,7 @@ form.addEventListener("submit", function (event) {
         .then((data) => {
             if (data.success) {
                 errorBox.style.display = "none";
-                window.location.href = "/app/dashboard.html";
+                window.location.href = "dashboard";
             } else {
                 errorBox.textContent = data.message;
                 errorBox.style.display = "block";

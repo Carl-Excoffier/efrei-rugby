@@ -1,9 +1,29 @@
+fetch("api/user")
+    .then((res) => res.json())
+    .then((data) => {
+        if (data.success) {
+            if (
+                data.user.roster_category === "coaches" ||
+                data.user.preferred_position === "Admin"
+            ) {
+                const sideBar = document.getElementById("sidebar-list");
+                const listElem = document.createElement("li");
+                listElem.textContent = "Coach Panel";
+                listElem.onclick = () => {
+                    location.href = "coach";
+                };
+
+                sideBar.appendChild(listElem);
+            }
+        }
+    });
+
 const lightbox = document.getElementById("lightbox");
 const lightboxImg = document.getElementById("lightbox-img");
 let currentImages = [];
 let currentIndex = 0;
 
-fetch("/app/api/gallery")
+fetch("api/gallery")
     .then((res) => res.json())
     .then((data) => {
         const container = document.getElementById("photo-gallery");
@@ -31,7 +51,7 @@ fetch("/app/api/gallery")
 
                 event.photos.forEach((file) => {
                     const img = document.createElement("img");
-                    img.src = `photos/${event.folderName}/${file}`;
+                    img.src = `photos/events/${event.folderName}/${file}`;
                     img.className = "gallery-image";
                     Object.assign(img.style, {
                         width: "100%",
@@ -93,3 +113,14 @@ document.addEventListener("keydown", (e) => {
         if (e.key === "Escape") lightbox.onclick();
     }
 });
+
+const logoutBtn = document.getElementById("logout-btn");
+if (logoutBtn) {
+    logoutBtn.addEventListener("click", () => {
+        fetch("api/logout", { method: "POST" })
+            .then((res) => res.json())
+            .then((data) => {
+                if (data.success) window.location.href = "./";
+            });
+    });
+}

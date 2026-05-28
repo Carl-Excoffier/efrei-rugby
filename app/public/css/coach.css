@@ -1,0 +1,145 @@
+.coach-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 25px;
+    margin-top: 20px;
+    align-items: start;
+}
+@media (max-width: 900px) {
+    .coach-layout {
+        grid-template-columns: 1fr;
+    }
+}
+.no-padding-card {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+.player-list-container {
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fff;
+}
+.search-bar {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-bottom: 2px solid #105b3f;
+    box-sizing: border-box;
+    font-size: 1em;
+    position: sticky;
+    top: 0;
+    outline: none;
+}
+.player-list-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.player-list-item:hover {
+    background: #f0f7f4;
+}
+.player-list-item.active {
+    background: #105b3f;
+    color: white;
+}
+.player-list-item.active .list-pos {
+    color: #e0f7fa;
+}
+.list-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 15px;
+    background: #eee;
+}
+.list-name {
+    margin: 0;
+    font-weight: bold;
+    font-size: 1em;
+}
+.list-pos {
+    margin: 0;
+    font-size: 0.8em;
+    color: #777;
+    text-transform: uppercase;
+}
+.player-details-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+.player-details-img {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-right: 20px;
+    border: 3px solid #105b3f;
+}
+.player-details-name {
+    margin: 0;
+    color: #105b3f;
+}
+.player-details-pos {
+    margin: 0;
+    color: #666;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+.two-col-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-bottom: 5px;
+    color: #333;
+}
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-family: inherit;
+}
+.btn-submit {
+    background: #105b3f;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1em;
+    transition: opacity 0.2s;
+}
+.btn-submit:hover {
+    opacity: 0.8;
+}
+.btn-submit.orange {
+    background: #d97706;
+}
+.empty-state {
+    margin-top: 0;
+    text-align: center;
+    padding: 50px 20px;
+    color: #888;
+}
