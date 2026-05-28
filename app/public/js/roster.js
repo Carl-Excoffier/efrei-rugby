@@ -46,7 +46,7 @@ fetch("api/roster")
                         .toLowerCase()
                         .trim();
                     const expectedPhotoName = `${formattedFirstName}_${formattedLastName}.jpg`;
-                    playerImg.src = `/photos/profiles/${expectedPhotoName}`;
+                    playerImg.src = `photos/profiles/${expectedPhotoName}`;
 
                     playerImg.onerror = function () {
                         this.onerror = null;

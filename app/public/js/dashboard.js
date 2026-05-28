@@ -59,8 +59,13 @@ document.addEventListener("DOMContentLoaded", () => {
             .then((res) => res.json())
             .then((data) => {
                 if (data.success && data.photos.length > 0) {
+                    const date = new Date(data.event.date);
+                    const dateStr = date.toLocaleDateString("en-GB", {
+                        month: "short",
+                        year: "numeric",
+                    });
                     document.getElementById("event-title").textContent =
-                        `${data.eventType}: ${data.eventName}`;
+                        `${data.event.event_type}: ${data.event.event_name} - ${dateStr}`;
 
                     const gallery = document.getElementById("photo-gallery");
                     gallery.innerHTML = "";
@@ -68,7 +73,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     data.photos.forEach((file) => {
                         const img = document.createElement("img");
-                        img.src = `photos/events/${data.folderName}/${file}`;
+                        img.src = `photos/events/${data.event.folder_name}/${file}`;
                         img.className = "gallery-image";
                         gallery.appendChild(img);
                     });
@@ -87,7 +92,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     reviewEl.className = "review-card";
 
                     const title = document.createElement("h4");
-                    title.textContent = `${data.review.event_name} (${data.review.event_type})`;
+                    const date = new Date(data.review.date);
+                    const dateStr = date.toLocaleDateString("en-GB", {
+                        month: "short",
+                        year: "numeric",
+                    });
+                    title.textContent = `${data.review.event_name} - ${dateStr} (${data.review.event_type})`;
 
                     const ratingP = document.createElement("p");
                     ratingP.className = "rating";
@@ -110,36 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         "<p>No coach reviews posted yet.</p>";
                 }
             });
-
-        // 5. FETCH UPCOMING MATCHES (Optional Dashboard Widget)
-        fetch("api/schedule-events")
-            .then((res) => res.json())
-            .then((data) => {
-                if (data.success) {
-                    // Filter to ONLY matches
-                    const matchesOnly = data.upcomingEvents.filter(
-                        (e) =>
-                            e.event_type &&
-                            e.event_type.toLowerCase() === "match",
-                    );
-
-                    matchesOnly.forEach((match) => {
-                        // Format to MM-YYYY
-                        const dateObj = new Date(match.date);
-                        const month = String(dateObj.getMonth() + 1).padStart(
-                            2,
-                            "0",
-                        );
-                        const year = dateObj.getFullYear();
-                        const dateStr = `${month}-${year}`;
-
-                        // You can append this data to whatever HTML element you want here!
-                        // console.log(`Upcoming Match: ${match.event_name} on ${dateStr}`);
-                    });
-                }
-            });
     }
-
     // RUN EVERYTHING ON LOAD
     loadDashboard();
 

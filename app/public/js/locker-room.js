@@ -33,11 +33,15 @@ fetch("api/gallery")
             data.events.forEach((event) => {
                 const eventSection = document.createElement("div");
                 eventSection.className = "card";
-                eventSection.style.marginBottom = "30px";
 
                 const title = document.createElement("h2");
-                title.textContent = `${event.eventType}: ${event.eventName}`;
-                title.style.borderBottom = "2px solid #105b3f";
+                title.className = "section-title";
+                const date = new Date(event.date);
+                const dateStr = date.toLocaleDateString("en-GB", {
+                    month: "short",
+                    year: "numeric",
+                });
+                title.textContent = `${event.eventType}: ${event.eventName} - ${dateStr}`;
 
                 const photoGrid = document.createElement("div");
                 photoGrid.className = "gallery-grid";

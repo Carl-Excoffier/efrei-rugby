@@ -174,11 +174,60 @@ app.get("/api/user", (req, res) => {
         });
     });
 });
+app.post("/api/coach/add-review", requireCoachAPI, (req, res) => {
+    const { playerId, eventId, rating, comment } = req.body;
+
+    // STEP 1: Insert the newly created review
+    const insertQuery = `
+        INSERT INTO reviews (player_id, event_id, rating, comment)
+        VALUES (?, ?, ?, ?)
+    `;
+
+    db.query(
+        insertQuery,
+        [playerId, eventId, rating, comment],
+        (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.json({ success: false, message: "Database error." });
+            }
+
+            // STEP 2: Ask MySQL to recalculate the average and update the player!
+            // We use ROUND(..., 1) to keep it cleanly to one decimal place (e.g., 4.2)
+            const updateAvgQuery = `
+            UPDATE players
+            SET avg_review = (
+                SELECT ROUND(AVG(rating), 1)
+                FROM reviews
+                WHERE player_id = ?
+            )
+            WHERE id = ?
+        `;
+
+            // Notice we pass playerId twice because of the two '?' marks in the query
+            db.query(updateAvgQuery, [playerId, playerId], (updateErr) => {
+                if (updateErr) {
+                    console.error("Failed to update average:", updateErr);
+                    // We still return true because the review itself successfully posted
+                    return res.json({
+                        success: true,
+                        message: "Review posted, but average failed to update.",
+                    });
+                }
+
+                res.json({
+                    success: true,
+                    message: "Review posted & player average updated!",
+                });
+            });
+        },
+    );
+});
 // 8. ADD RECENT PHOTOS
 app.get("/api/latest-photos", (req, res) => {
     // 1. Find the latest event in the DB
     const query =
-        "SELECT event_name, folder_name, event_type FROM events WHERE folder_name IS NOT NULL ORDER BY date DESC LIMIT 1";
+        "SELECT event_name, folder_name, event_type, date FROM events WHERE folder_name IS NOT NULL ORDER BY date DESC LIMIT 1";
 
     db.query(query, (err, results) => {
         if (err || results.length === 0) {
@@ -186,29 +235,23 @@ app.get("/api/latest-photos", (req, res) => {
         }
 
         const event = results[0];
-
-        // 2. Build the exact physical path to that folder on the hard drive
         const folderPath = path.join(
             __dirname,
             "public",
             "photos/events",
             event.folder_name,
         );
-
         // 3. Ask Node.js to look inside that folder
         fs.readdir(folderPath, (err, files) => {
             if (err) {
                 // If the folder doesn't exist or is empty, just send an empty array
                 return res.json({
                     success: true,
-                    eventName: event.event_name,
-                    eventType: event.event_type,
-                    folderName: event.folder_name,
+                    event: event,
                     photos: [],
                 });
             }
 
-            // 4. Filter out any junk files (like hidden Mac .DS_Store files), keep only images
             const images = files.filter((file) =>
                 file.match(/\.(jpg|jpeg|png|gif|webp)$/i),
             );
@@ -220,9 +263,7 @@ app.get("/api/latest-photos", (req, res) => {
             // 5. Send the list of file names to the frontend!
             res.json({
                 success: true,
-                eventName: event.event_name,
-                eventType: event.event_type,
-                folderName: event.folder_name,
+                event: event,
                 photos: randomPhotos,
             });
         });
@@ -273,7 +314,7 @@ app.get("/api/next-training", (req, res) => {
 app.get("/api/gallery", (req, res) => {
     // Grab ALL events, ordered by newest first
     const query =
-        "SELECT event_name, folder_name, event_type FROM events WHERE folder_name IS NOT NULL ORDER BY date DESC";
+        "SELECT event_name, folder_name, event_type, date FROM events WHERE folder_name IS NOT NULL ORDER BY date DESC";
 
     db.query(query, (err, results) => {
         if (err)
@@ -301,6 +342,7 @@ app.get("/api/gallery", (req, res) => {
                     // Only add the event to the gallery if it actually has photos in it!
                     if (images.length > 0) {
                         galleryData.push({
+                            date: event.date,
                             eventName: event.event_name,
                             eventType: event.event_type,
                             folderName: event.folder_name,
@@ -461,20 +503,52 @@ app.post("/api/coach/update-player-full", requireCoachAPI, (req, res) => {
 app.post("/api/coach/add-review", requireCoachAPI, (req, res) => {
     const { playerId, eventId, rating, comment } = req.body;
 
-    const query = `
+    // STEP 1: Insert the newly created review
+    const insertQuery = `
         INSERT INTO reviews (player_id, event_id, rating, comment)
         VALUES (?, ?, ?, ?)
     `;
 
-    db.query(query, [playerId, eventId, rating, comment], (err, results) => {
-        if (err) {
-            console.error(err);
-            return res.json({ success: false, message: "Database error." });
-        }
-        res.json({ success: true, message: "Review posted successfully!" });
-    });
-});
+    db.query(
+        insertQuery,
+        [playerId, eventId, rating, comment],
+        (err, results) => {
+            if (err) {
+                console.error(err);
+                return res.json({ success: false, message: "Database error." });
+            }
 
+            // STEP 2: Ask MySQL to recalculate the average and update the player!
+            // We use ROUND(..., 1) to keep it cleanly to one decimal place (e.g., 4.2)
+            const updateAvgQuery = `
+            UPDATE players
+            SET avg_review = (
+                SELECT ROUND(AVG(rating), 1)
+                FROM reviews
+                WHERE player_id = ?
+            )
+            WHERE id = ?
+        `;
+
+            // Notice we pass playerId twice because of the two '?' marks in the query
+            db.query(updateAvgQuery, [playerId, playerId], (updateErr) => {
+                if (updateErr) {
+                    console.error("Failed to update average:", updateErr);
+                    // We still return true because the review itself successfully posted
+                    return res.json({
+                        success: true,
+                        message: "Review posted, but average failed to update.",
+                    });
+                }
+
+                res.json({
+                    success: true,
+                    message: "Review posted & player average updated!",
+                });
+            });
+        },
+    );
+});
 // 2. CREATE NEW PLAYER
 app.post("/api/coach/add-player", requireCoachAPI, (req, res) => {
     const { firstName, lastName, email, password } = req.body;
