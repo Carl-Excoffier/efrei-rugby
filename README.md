@@ -126,7 +126,7 @@ Following the official instructions from https://certbot.eff.org/ for **"Nginx" 
 ### Verification
 To confirm that the site was set up properly with SSL/TLS, I visited `https://efrei-rugby.fr` in a web browser. I clicked on the lock icon next to the URL to inspect the connection and verified that the certificate was actively issued and verified by Let's Encrypt.
 
-![secured Domain screenshot](screenshots/Screenshot_SSL.jpg)
+![secured Domain screenshot](./screenshots/Screenshot_SSL.jpg)
 
 ## 7. Scripting Component: Dynamic Player Review Logic
 
