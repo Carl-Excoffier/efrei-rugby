@@ -26,16 +26,16 @@ The server is hosted on AWS EC2 using an Ubuntu AMI.
 ## 3. Server Environment Configuration
 *Note: The following commands should be run in the Ubuntu terminal via SSH.*
 
-**Update the system:**
+1. **Update the system:**
 `sudo apt update && sudo apt upgrade -y`
 
-**Install Node.js & npm (via Snap):**
+2. **Install Node.js & npm (via Snap):**
 `sudo snap install node --classic`
 
-**Install MySQL Server:**
+3. **Install MySQL Server:**
 `sudo apt install mysql-server -y`
 
-**Install PM2 (Process Manager):**
+4. **Install PM2 (Process Manager):**
 `sudo npm install -g pm2`
 
 ## 4. Database Setup
@@ -45,7 +45,7 @@ The server is hosted on AWS EC2 using an Ubuntu AMI.
    CREATE DATABASE efreirugby;
    CREATE USER 'app_user'@'localhost' IDENTIFIED BY 'rugby2026';
    GRANT ALL PRIVILEGES ON efreirugby.* TO 'app_user'@'localhost';
-   FLUSH PRIVILEGES;
+   FLUSH PRIVILEGES;```
 
 ## 5. Application Deployment (Node.js & Nginx)
 
@@ -88,3 +88,38 @@ By default, Node.js runs on port 3000, which is not exposed to the public intern
   `sudo nginx -t`
 5. **Restart Nginx to apply the changes**
   `sudo systemctl restart nginx`
+
+## 6. DNS & SSL/TLS Configuration
+
+### Pre-requisites & DNS Setup (Amazon Route 53)
+To ensure the server has a persistent, unchanging public address, an **Elastic IP** (`54.252.151.249`) was allocated in AWS and permanently associated with the EC2 instance. 
+
+DNS routing was managed using **Amazon Route 53**. A Hosted Zone was created for `efrei-rugby.fr`, and an **A Record** was configured to point directly to the Elastic IP address.
+
+*This configuration process is sourced from the official Let's Encrypt documentation: https://letsencrypt.org/getting-started/*
+
+### Pre-requisites & DNS Setup
+Before obtaining an SSL certificate, I ensured an **A Record** was created at my domain registrar pointing `efrei-rugby.fr` to the AWS EC2 Elastic IP address (`54.252.151.249`).
+
+To verify that this prerequisite was met, I confirmed I could SSH into the server using my domain name instead of just the IP address:
+`ssh -i pemkey.pem ubuntu@efrei-rugby.fr`
+
+I also verified that the Nginx web server was actively serving the site over standard HTTP and that the AWS firewall had TCP ports 22, 80, and 443 open. This was verified from the CLI using:
+`wget http://efrei-rugby.fr`
+
+### Obtaining a Digital Certificate from Let's Encrypt
+Once I tested that the website was working over HTTP (Port 80), it was time to get a certificate and enable it over HTTPS (Port 443). 
+
+Following the official instructions from https://certbot.eff.org/ for **"Nginx" on "Linux (snap)"**, I completed the following steps at the command prompt:
+
+1. **Ensure the snapd core is up to date:**
+   `sudo snap install core; sudo snap refresh core`
+2. **Install Certbot via Snap:**
+   `sudo snap install --classic certbot`
+3. **Link the Certbot command to the system path:**
+   `sudo ln -s /snap/bin/certbot /usr/bin/certbot`
+4. **Generate the certificate and automatically configure Nginx:**
+   `sudo certbot --nginx -d efrei-rugby.fr`
+
+### Verification
+To confirm that the site was set up properly with SSL/TLS, I visited `https://efrei-rugby.fr` in a web browser. I clicked on the lock icon next to the URL to inspect the connection and verified that the certificate was actively issued and verified by Let's Encrypt.
