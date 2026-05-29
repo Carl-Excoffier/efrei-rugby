@@ -6,7 +6,7 @@
 ### Key Links
 * **Live Website (DNS):** https://efrei-rugby.fr
 * **Global IP Address:** 54.252.151.249
-* **Video Explainer:** [Link to your YouTube/Vimeo video]
+* **Video Explainer:** https://youtu.be/03GZrHSMZxQ
 * **GitHub Repository:** https://github.com/Carl-Excoffier/efrei-rugby
 
 ---
@@ -66,7 +66,7 @@ This application uses a robust, two-tier deployment strategy: **PM2** manages th
    `pm2 save`
 
 <figure>
-  <img src="screenshots/Screenshot_pm2.png" alt="PM2 Status">
+  <img src="https://github.com/Carl-Excoffier/efrei-rugby/blob/main/screenshots/Screenshot_pm2.png?raw=true" alt="PM2 Status">
   <figcaption><em>Caption: My Node.js backend running smoothly in the background via PM2.</em></figcaption>
 </figure>
 
@@ -130,7 +130,7 @@ Following the official instructions from https://certbot.eff.org/ for **"Nginx" 
 To confirm that the site was set up properly with SSL/TLS, I visited `https://efrei-rugby.fr` in a web browser. I clicked on the lock icon next to the URL to inspect the connection and verified that the certificate was actively issued and verified by Let's Encrypt.
 
 <figure>
-  <img src="screenshots/Screenshot_SSL.png" alt="Domain Secured">
+  <img src="https://github.com/Carl-Excoffier/efrei-rugby/blob/main/screenshots/Screenshot_SSL.png?raw=true" alt="Domain Secured">
   <figcaption><em>Caption: The Symbol confirms that my website is well secured.</em></figcaption>
 </figure>
 
