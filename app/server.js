@@ -8,7 +8,6 @@ const fs = require("fs");
 
 const app = express();
 
-// 1. Create the Database Connection Pool
 const db = mysql.createPool({
     host: "localhost",
     user: "app_user",
@@ -19,7 +18,6 @@ const db = mysql.createPool({
     queueLimit: 0,
 });
 
-// Test the connection on startup
 db.getConnection((err, connection) => {
     if (err) {
         console.error("Database connection failed:", err);
@@ -29,8 +27,7 @@ db.getConnection((err, connection) => {
     }
 });
 
-// 2. TURN ON TRANSLATORS & SESSIONS FIRST
-app.use(express.json()); // Reads JSON data
+app.use(express.json());
 app.use(
     session({
         secret: "efrei-rugby-super-secret-key",
@@ -39,7 +36,7 @@ app.use(
     }),
 );
 
-// 3. THE BOUNCER MIDDLEWARE (Must be BEFORE express.static!)
+// MUST sit before express.static to prevent direct unauthenticated access to physical .html files
 app.use((req, res, next) => {
     const protectedPaths = [
         "/dashboard.html",
@@ -67,15 +64,12 @@ app.use((req, res, next) => {
     }
 });
 
-// 4. SERVE STATIC FILES (Only accessible if the Bouncer let them pass)
 app.use(express.static(path.join(__dirname, "public")));
 
-// Root route
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "html", "login.html"));
 });
 
-// Dashboard route (Secondary safety catch)
 app.get("/dashboard", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "html", "dashboard.html"));
 });
@@ -100,7 +94,6 @@ app.get("/coach", requireCoach, (req, res) =>
     res.sendFile(path.join(__dirname, "public", "html", "coach.html")),
 );
 
-// 5. THE LOGIN DOORWAY (With our Nginx array fix)
 app.post("/api/login", (req, res) => {
     const userEmail = req.body.email;
     const userPassword = req.body.password;
@@ -117,10 +110,8 @@ app.post("/api/login", (req, res) => {
         }
 
         if (results.length > 0) {
-            // GIVE THEM THE WRISTBAND!
             req.session.loggedIn = true;
             req.session.user = results[0];
-
             res.json({ success: true });
         } else {
             res.json({
@@ -131,30 +122,25 @@ app.post("/api/login", (req, res) => {
     });
 });
 
-// 6. THE LOGOUT DOORWAY
 app.post("/api/logout", (req, res) => {
-    // This built-in function shreds the VIP wristband!
     req.session.destroy((err) => {
         if (err) {
             console.error("Error destroying session:", err);
             return res.json({ success: false, message: "Could not log out." });
         }
-
-        // Tells the browser to delete the cookie on their end too
         res.clearCookie("connect.sid");
         res.json({ success: true });
     });
 });
 
 app.get("/api/user", (req, res) => {
-    // Check if the user is actually logged in
     if (!req.session || !req.session.loggedIn || !req.session.user) {
         return res
             .status(401)
             .json({ success: false, message: "Not logged in" });
     }
 
-    // FRESH DATA QUERY: Ask the DB for the absolute latest player stats
+    // Forces a DB query to bypass stale session data and catch changes instantly
     const query = "SELECT * FROM players WHERE id = ?";
     db.query(query, [req.session.user.id], (err, results) => {
         if (err || results.length === 0) {
@@ -164,68 +150,12 @@ app.get("/api/user", (req, res) => {
             });
         }
 
-        // Overwrite the old session snapshot with the fresh data
         req.session.user = results[0];
-
-        // Send back the fresh data to the dashboard
-        res.json({
-            success: true,
-            user: results[0],
-        });
+        res.json({ success: true, user: results[0] });
     });
 });
-app.post("/api/coach/add-review", requireCoachAPI, (req, res) => {
-    const { playerId, eventId, rating, comment } = req.body;
 
-    // STEP 1: Insert the newly created review
-    const insertQuery = `
-        INSERT INTO reviews (player_id, event_id, rating, comment)
-        VALUES (?, ?, ?, ?)
-    `;
-
-    db.query(
-        insertQuery,
-        [playerId, eventId, rating, comment],
-        (err, results) => {
-            if (err) {
-                console.error(err);
-                return res.json({ success: false, message: "Database error." });
-            }
-
-            // STEP 2: Ask MySQL to recalculate the average and update the player!
-            // We use ROUND(..., 1) to keep it cleanly to one decimal place (e.g., 4.2)
-            const updateAvgQuery = `
-            UPDATE players
-            SET avg_review = (
-                SELECT ROUND(AVG(rating), 1)
-                FROM reviews
-                WHERE player_id = ?
-            )
-            WHERE id = ?
-        `;
-
-            // Notice we pass playerId twice because of the two '?' marks in the query
-            db.query(updateAvgQuery, [playerId, playerId], (updateErr) => {
-                if (updateErr) {
-                    console.error("Failed to update average:", updateErr);
-                    // We still return true because the review itself successfully posted
-                    return res.json({
-                        success: true,
-                        message: "Review posted, but average failed to update.",
-                    });
-                }
-
-                res.json({
-                    success: true,
-                    message: "Review posted & player average updated!",
-                });
-            });
-        },
-    );
-});
-// 8. ADD RECENT PHOTOS
 app.get("/api/latest-photos", (req, res) => {
-    // 1. Find the latest event in the DB
     const query =
         "SELECT event_name, folder_name, event_type, date FROM events WHERE folder_name IS NOT NULL ORDER BY date DESC LIMIT 1";
 
@@ -241,78 +171,56 @@ app.get("/api/latest-photos", (req, res) => {
             "photos/events",
             event.folder_name,
         );
-        // 3. Ask Node.js to look inside that folder
+
         fs.readdir(folderPath, (err, files) => {
             if (err) {
-                // If the folder doesn't exist or is empty, just send an empty array
-                return res.json({
-                    success: true,
-                    event: event,
-                    photos: [],
-                });
+                return res.json({ success: true, event: event, photos: [] });
             }
 
             const images = files.filter((file) =>
                 file.match(/\.(jpg|jpeg|png|gif|webp)$/i),
             );
 
+            // Shuffles array layout elements on index mapping before array slicing
             const randomPhotos = images
-                .sort(() => 0.5 - Math.random()) // Randomly shuffles the array
-                .slice(0, 5); // Grabs exactly the first 5 items (or fewer, if the folder has less than 5)
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 5);
 
-            // 5. Send the list of file names to the frontend!
-            res.json({
-                success: true,
-                event: event,
-                photos: randomPhotos,
-            });
+            res.json({ success: true, event: event, photos: randomPhotos });
         });
     });
 });
 
 app.get("/api/latest-review", (req, res) => {
-    const query = `SELECT
-        r.*,
-        e.event_name,
-        e.event_type,
-        e.date
-    FROM reviews r
-    JOIN events e ON r.event_id = e.id
-    WHERE r.player_id = ?
-    ORDER BY e.date DESC LIMIT 1`;
+    const query = `SELECT r.*, e.event_name, e.event_type, e.date
+                   FROM reviews r
+                   JOIN events e ON r.event_id = e.id
+                   WHERE r.player_id = ?
+                   ORDER BY e.date DESC LIMIT 1`;
 
     db.query(query, [req.session.user.id], (err, results) => {
         if (err || results.length === 0) {
             return res.json({ success: false, message: "No review found." });
         }
-
-        res.json({
-            success: true,
-            review: results[0],
-        });
+        res.json({ success: true, review: results[0] });
     });
 });
 
 app.get("/api/next-training", (req, res) => {
-    const query = `SELECT event_name, date FROM events WHERE event_type = 'training' AND date >=NOW() ORDER BY date ASC LIMIT 1`;
+    const query = `SELECT event_name, date FROM events WHERE event_type = 'training' AND date >= NOW() ORDER BY date ASC LIMIT 1`;
     db.query(query, (err, results) => {
         if (err) {
             console.error("Error fetching next training:", err);
             return res.json({ success: false, message: "Database error." });
         }
-
         if (results.length === 0) {
             return res.json({ success: true, training: null });
         }
-        res.json({
-            success: true,
-            training: results[0],
-        });
+        res.json({ success: true, training: results[0] });
     });
 });
-// 9. THE FULL LOCKER ROOM GALLERY
+
 app.get("/api/gallery", (req, res) => {
-    // Grab ALL events, ordered by newest first
     const query =
         "SELECT event_name, folder_name, event_type, date FROM events WHERE folder_name IS NOT NULL ORDER BY date DESC";
 
@@ -322,7 +230,7 @@ app.get("/api/gallery", (req, res) => {
 
         const galleryData = [];
 
-        // We use a synchronous loop here so we can pack the box neatly before sending it
+        // Synchronous loop handles I/O file checks safely before firing final response payload
         for (let event of results) {
             const folderPath = path.join(
                 __dirname,
@@ -332,14 +240,12 @@ app.get("/api/gallery", (req, res) => {
             );
 
             try {
-                // If the folder actually exists on the hard drive...
                 if (fs.existsSync(folderPath)) {
                     const files = fs.readdirSync(folderPath);
                     const images = files.filter((file) =>
                         file.match(/\.(jpg|jpeg|png|gif|webp)$/i),
                     );
 
-                    // Only add the event to the gallery if it actually has photos in it!
                     if (images.length > 0) {
                         galleryData.push({
                             date: event.date,
@@ -354,21 +260,16 @@ app.get("/api/gallery", (req, res) => {
                 console.error("Could not read folder:", event.folder_name);
             }
         }
-
-        // Send the massive payload to the frontend
         res.json({ success: true, events: galleryData });
     });
 });
 
-/// A. GET FULL PROFILE & REVIEWS
 app.get("/api/profile", (req, res) => {
     if (!req.session || !req.session.loggedIn || !req.session.user) {
         return res.json({ success: false, message: "Not logged in" });
     }
 
     const userId = req.session.user.id;
-
-    // 1. FRESH DATA QUERY: Ask the DB for the absolute latest stats
     const playerQuery = "SELECT * FROM players WHERE id = ?";
 
     db.query(playerQuery, [userId], (err, playerResults) => {
@@ -381,17 +282,10 @@ app.get("/api/profile", (req, res) => {
         }
 
         const freshUserData = playerResults[0];
-
-        // Bonus: Update the snapshot in memory so other pages get the fresh data too!
         req.session.user = freshUserData;
 
-        // 2. REVIEWS QUERY: JOIN reviews with events
         const reviewsQuery = `
-            SELECT
-                r.*,
-                e.event_name,
-                e.event_type,
-                e.date
+            SELECT r.*, e.event_name, e.event_type, e.date
             FROM reviews r
             JOIN events e ON r.event_id = e.id
             WHERE r.player_id = ?
@@ -406,8 +300,6 @@ app.get("/api/profile", (req, res) => {
                     message: "Error fetching reviews.",
                 });
             }
-
-            // Send the perfectly fresh data to the frontend
             res.json({
                 success: true,
                 player: freshUserData,
@@ -447,22 +339,12 @@ app.get("/api/roster", (req, res) => {
             },
         ];
 
-        res.json({
-            success: true,
-            roster: formatedRoster,
-        });
+        res.json({ success: true, roster: formatedRoster });
     });
 });
 
 app.get("/api/coach/players", requireCoachAPI, (req, res) => {
-    // Get everyone except other coaches and staff, sorted alphabetically
-    const query = `
-        SELECT *
-        FROM players
-        WHERE roster_category IN ('forwards', 'backs', 'staff', 'benched', 'unassigned')
-        ORDER BY first_name ASC
-    `;
-
+    const query = `SELECT * FROM players WHERE roster_category IN ('forwards', 'backs', 'staff', 'benched', 'unassigned') ORDER BY first_name ASC`;
     db.query(query, (err, results) => {
         if (err) return res.json({ success: false, message: "Database error" });
         res.json({ success: true, players: results });
@@ -471,15 +353,7 @@ app.get("/api/coach/players", requireCoachAPI, (req, res) => {
 
 app.post("/api/coach/update-player-full", requireCoachAPI, (req, res) => {
     const { playerId, position, tries, yellow, red } = req.body;
-
-    const query = `
-        UPDATE players
-        SET preferred_position = ?,
-            tries = ?,
-            yellow_cards = ?,
-            red_cards = ?
-        WHERE id = ?
-    `;
+    const query = `UPDATE players SET preferred_position = ?, tries = ?, yellow_cards = ?, red_cards = ? WHERE id = ?`;
 
     db.query(
         query,
@@ -500,14 +374,11 @@ app.post("/api/coach/update-player-full", requireCoachAPI, (req, res) => {
     );
 });
 
+// Assignment Scripting Component: Chained queries driving an aggregate subquery math calculation directly inside MySQL
 app.post("/api/coach/add-review", requireCoachAPI, (req, res) => {
     const { playerId, eventId, rating, comment } = req.body;
 
-    // STEP 1: Insert the newly created review
-    const insertQuery = `
-        INSERT INTO reviews (player_id, event_id, rating, comment)
-        VALUES (?, ?, ?, ?)
-    `;
+    const insertQuery = `INSERT INTO reviews (player_id, event_id, rating, comment) VALUES (?, ?, ?, ?)`;
 
     db.query(
         insertQuery,
@@ -518,29 +389,20 @@ app.post("/api/coach/add-review", requireCoachAPI, (req, res) => {
                 return res.json({ success: false, message: "Database error." });
             }
 
-            // STEP 2: Ask MySQL to recalculate the average and update the player!
-            // We use ROUND(..., 1) to keep it cleanly to one decimal place (e.g., 4.2)
             const updateAvgQuery = `
             UPDATE players
-            SET avg_review = (
-                SELECT ROUND(AVG(rating), 1)
-                FROM reviews
-                WHERE player_id = ?
-            )
+            SET avg_review = (SELECT ROUND(AVG(rating), 1) FROM reviews WHERE player_id = ?)
             WHERE id = ?
         `;
 
-            // Notice we pass playerId twice because of the two '?' marks in the query
             db.query(updateAvgQuery, [playerId, playerId], (updateErr) => {
                 if (updateErr) {
                     console.error("Failed to update average:", updateErr);
-                    // We still return true because the review itself successfully posted
                     return res.json({
                         success: true,
                         message: "Review posted, but average failed to update.",
                     });
                 }
-
                 res.json({
                     success: true,
                     message: "Review posted & player average updated!",
@@ -549,14 +411,10 @@ app.post("/api/coach/add-review", requireCoachAPI, (req, res) => {
         },
     );
 });
-// 2. CREATE NEW PLAYER
+
 app.post("/api/coach/add-player", requireCoachAPI, (req, res) => {
     const { firstName, lastName, email, password } = req.body;
-
-    const query = `
-        INSERT INTO players (first_name, last_name, email, password, preferred_position)
-        VALUES (?, ?, ?, ?, 'Unassigned')
-    `;
+    const query = `INSERT INTO players (first_name, last_name, email, password, preferred_position) VALUES (?, ?, ?, ?, 'Unassigned')`;
     db.query(query, [firstName, lastName, email, password], (err, results) => {
         if (err) {
             console.error(err);
@@ -571,10 +429,7 @@ app.post("/api/coach/add-player", requireCoachAPI, (req, res) => {
 
 app.post("/api/coach/remove-player", requireCoachAPI, (req, res) => {
     const { id } = req.body;
-
-    const query = `
-        DELETE FROM players WHERE id = ?;
-    `;
+    const query = `DELETE FROM players WHERE id = ?;`;
     db.query(query, id, (err, results) => {
         if (err) {
             console.error(err);
@@ -587,14 +442,10 @@ app.post("/api/coach/remove-player", requireCoachAPI, (req, res) => {
     });
 });
 
-// 3. SCHEDULE NEW EVENT
 app.post("/api/coach/add-event", requireCoachAPI, (req, res) => {
     const { eventName, eventType, eventDate, eventTime } = req.body;
     const mysqlDateTime = `${eventDate} ${eventTime}:00`;
-    const query = `
-        INSERT INTO events (event_name, event_type, date)
-        VALUES (?, ?, ?)
-    `;
+    const query = `INSERT INTO events (event_name, event_type, date) VALUES (?, ?, ?)`;
     db.query(query, [eventName, eventType, mysqlDateTime], (err, results) => {
         if (err) {
             console.error(err);
@@ -603,21 +454,12 @@ app.post("/api/coach/add-event", requireCoachAPI, (req, res) => {
                 message: "Database error while scheduling.",
             });
         }
-        res.json({
-            success: true,
-            message: "Event added to the schedule!",
-        });
+        res.json({ success: true, message: "Event added to the schedule!" });
     });
 });
 
-// --- GET FULL SCHEDULE ---
 app.get("/api/schedule-events", (req, res) => {
-    const query = `
-        SELECT
-        *
-        FROM events
-        ORDER BY date ASC
-    `;
+    const query = `SELECT * FROM events ORDER BY date ASC`;
 
     db.query(query, (err, results) => {
         if (err) {
@@ -634,13 +476,11 @@ app.get("/api/schedule-events", (req, res) => {
     });
 });
 
-// 10. START THE SERVER
 const PORT = 3000;
 app.listen(PORT, "0.0.0.0", () => {
     console.log(`Efrei Rugby Server is running on port ${3000}`);
 });
 
-// SECURE HTML BOUNCER: Kicks non-coaches back to the dashboard
 function requireCoach(req, res, next) {
     if (!req.session || !req.session.loggedIn) return res.redirect("./");
     if (
@@ -652,7 +492,7 @@ function requireCoach(req, res, next) {
     next();
 }
 
-// SECURE API BOUNCER: Blocks non-coaches from fetching/editing data
+// Blocks non-privileged account tiers at the REST data-layer level
 function requireCoachAPI(req, res, next) {
     if (
         !req.session ||

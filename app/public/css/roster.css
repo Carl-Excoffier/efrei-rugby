@@ -1,10 +1,8 @@
-/* --- ROSTER SECTIONS --- */
 .roster-section {
     margin-bottom: 40px;
     width: 100%;
 }
 
-/* Section Headers (Forwards, Backs, etc.) */
 .roster-section h2 {
     border-bottom: 3px solid #105b3f;
     padding-bottom: 10px;
@@ -14,7 +12,6 @@
     font-size: 1.5em;
 }
 
-/* --- THE GRID & CARDS --- */
 .roster-grid {
     display: flex;
     flex-wrap: wrap;
@@ -39,7 +36,6 @@
     box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
 }
 
-/* --- PLAYER INFO --- */
 .roster-img {
     width: 100%;
     height: 220px;

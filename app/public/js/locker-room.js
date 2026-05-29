@@ -12,7 +12,6 @@ fetch("api/user")
                 listElem.onclick = () => {
                     location.href = "coach";
                 };
-
                 sideBar.appendChild(listElem);
             }
         }
@@ -75,11 +74,14 @@ fetch("api/gallery")
 function updateLightbox() {
     lightboxImg.src = currentImages[currentIndex].src;
 }
+
+// Modulo arithmetic prevents index out-of-bounds, wrapping navigation infinitely
 function showNext(e) {
     if (e) e.stopPropagation();
     currentIndex = (currentIndex + 1) % currentImages.length;
     updateLightbox();
 }
+
 function showPrev(e) {
     if (e) e.stopPropagation();
     currentIndex =
@@ -87,6 +89,8 @@ function showPrev(e) {
     updateLightbox();
 }
 
+// Event delegation captures elements dynamically created post-fetch.
+// Isolates query selection exclusively to the active grid card context.
 document.addEventListener("click", (e) => {
     const clickedImg = e.target.closest(".gallery-image");
     if (clickedImg) {
@@ -105,6 +109,7 @@ document.getElementById("next-btn").onclick = showNext;
 document.getElementById("prev-btn").onclick = showPrev;
 document.getElementById("close-lightbox").onclick = () =>
     (lightbox.style.display = "none");
+
 lightbox.onclick = () => {
     lightbox.style.display = "none";
     lightboxImg.src = "";

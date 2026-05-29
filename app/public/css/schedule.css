@@ -73,6 +73,9 @@
 .event-badge.match {
     background: #d97706;
 }
+.event-badge.social {
+    background: #8b5cf6;
+}
 .event-card {
     background: #fff;
     border: 1px solid #ddd;
@@ -90,6 +93,9 @@
 }
 .event-card.match {
     border-left: 4px solid #d97706;
+}
+.event-card.social {
+    border-left: 4px solid #8b5cf6;
 }
 .event-card:hover {
     transform: translateY(-2px);

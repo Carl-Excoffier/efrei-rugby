@@ -9,7 +9,10 @@ fetch("api/user")
                 const sideBar = document.getElementById("sidebar-list");
                 const listElem = document.createElement("li");
                 listElem.textContent = "Coach Panel";
-                listElem.onclick = "location.href = 'coach'";
+
+                listElem.onclick = () => {
+                    location.href = "coach";
+                };
 
                 sideBar.appendChild(listElem);
             }
@@ -34,7 +37,7 @@ form.addEventListener("submit", function (event) {
     fetch("api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email, password: password }),
+        body: JSON.stringify({ email, password }),
     })
         .then((response) => response.json())
         .then((data) => {
@@ -46,7 +49,9 @@ form.addEventListener("submit", function (event) {
                 errorBox.style.display = "block";
             }
         })
+        // Handles low-level transport errors (e.g. offline instance, dropped server socket)
         .catch((error) => {
+            console.error("Network interface error:", error);
             errorBox.textContent = "Cannot connect to server.";
             errorBox.style.display = "block";
         });
