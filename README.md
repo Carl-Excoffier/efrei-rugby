@@ -9,6 +9,8 @@
 * **Video Explainer:** https://youtu.be/03GZrHSMZxQ
 * **GitHub Repository:** https://github.com/Carl-Excoffier/efrei-rugby
 
+* **Website Admin Credentials:** email: carl@efrei.fr      password: 0000
+
 ---
 
 ## 1. Project Overview
