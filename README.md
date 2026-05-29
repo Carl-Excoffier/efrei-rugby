@@ -2,7 +2,7 @@
 
 **Student Name:** Carl Excoffier
 **Student Number:** 35986331
-**Website Admin Credentials:** email: carl@efrei.fr      password: 0000
+* **Website Admin Credentials:** email: carl@efrei.fr      password: 0000
 
 ### Key Links
 * **Live Website (DNS):** https://efrei-rugby.fr
